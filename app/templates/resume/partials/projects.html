@@ -1,0 +1,18 @@
+{% if sections.projects %}
+<div class="section">
+    <h2 class="section-title">{{ t.headers.projects }}</h2>
+    {% for proj in sections.projects %}
+    <div class="item">
+        <div class="item-header clearfix">
+            <span class="title">{{ proj.title }}</span>
+            {% if proj.tech %}<span class="date">{{ proj.tech }}</span>{% endif %}
+        </div>
+        {% if proj.description %}
+        <div class="item-desc">
+            <span class="claim-text">{{ proj.description | safe }}</span>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}

@@ -1,0 +1,136 @@
+{
+  "clusters": {
+    "frontend_developer": {
+      "display_name": "Frontend Developer",
+      "skills": ["html", "css", "javascript", "react", "vue", "angular", "bootstrap", "tailwind", "responsive", "web", "ui", "dom", "ajax", "typescript", "sass", "npm", "git"],
+      "transferable_to": ["ui_ux_designer", "qa_automation_engineer", "web_designer"],
+      "keywords_summary": ["frontend", "user interface", "responsive", "web applications", "cross-browser"]
+    },
+    "ui_ux_designer": {
+      "display_name": "UI/UX Designer",
+      "skills": ["figma", "adobe xd", "sketch", "user research", "prototyping", "wireframes", "design systems", "usability", "ui", "ux", "html", "css", "responsive", "accessibility"],
+      "transferable_to": ["frontend_developer", "web_designer", "product_designer"],
+      "keywords_summary": ["user experience", "interface design", "prototyping", "user-centered design"]
+    },
+    "qa_automation_engineer": {
+      "display_name": "QA / Test Automation Engineer",
+      "skills": ["selenium", "test automation", "java", "python", "junit", "testing", "debugging", "quality", "ci/cd", "jira", "manual testing", "api testing", "problem solving"],
+      "transferable_to": ["frontend_developer", "technical_support", "devops_engineer"],
+      "keywords_summary": ["quality assurance", "testing", "automation", "debugging", "problem-solving"]
+    },
+    "technical_support": {
+      "display_name": "Technical Support / IT Support",
+      "skills": ["troubleshooting", "debugging", "customer support", "windows", "linux", "networking", "help desk", "documentation", "problem solving", "communication", "ticketing"],
+      "transferable_to": ["qa_automation_engineer", "system_administrator", "devops_engineer"],
+      "keywords_summary": ["technical support", "troubleshooting", "customer service", "problem resolution"]
+    },
+    "software_engineer": {
+      "display_name": "Software Engineer",
+      "skills": ["python", "java", "javascript", "sql", "git", "rest api", "flask", "django", "oop", "algorithms", "data structures", "agile", "scrum"],
+      "transferable_to": ["full_stack_developer", "backend_developer", "devops_engineer"],
+      "keywords_summary": ["software development", "full-stack", "backend", "APIs", "agile"]
+    },
+    "full_stack_developer": {
+      "display_name": "Full Stack Developer",
+      "skills": ["javascript", "node.js", "react", "sql", "html", "css", "python", "rest", "mongodb", "express", "git", "api", "frontend", "backend"],
+      "transferable_to": ["software_engineer", "frontend_developer", "backend_developer"],
+      "keywords_summary": ["full-stack", "web development", "frontend and backend", "end-to-end"]
+    },
+    "data_scientist": {
+      "display_name": "Data Scientist",
+      "skills": ["python", "pandas", "numpy", "scikit-learn", "machine learning", "statistics", "data analysis", "visualization", "sql", "jupyter", "r", "tensorflow"],
+      "transferable_to": ["data_analyst", "ml_engineer", "business_analyst"],
+      "keywords_summary": ["data analysis", "machine learning", "predictive modeling", "statistics"]
+    },
+    "mechanical_engineer": {
+      "display_name": "Mechanical Engineer",
+      "skills": ["cad", "solidworks", "autocad", "manufacturing", "thermodynamics", "materials", "design", "simulation", "gd&t", "fea", "cnc", "prototyping"],
+      "transferable_to": ["production_engineer", "quality_control_engineer", "maintenance_engineer"],
+      "keywords_summary": ["mechanical design", "manufacturing", "engineering", "product development"]
+    },
+    "production_engineer": {
+      "display_name": "Production / Manufacturing Engineer",
+      "skills": ["manufacturing", "production", "process improvement", "lean", "six sigma", "cad", "quality", "safety", "scheduling", "optimization", "machining"],
+      "transferable_to": ["mechanical_engineer", "quality_control_engineer", "industrial_engineer"],
+      "keywords_summary": ["manufacturing", "production", "process optimization", "efficiency"]
+    },
+    "quality_control_engineer": {
+      "display_name": "Quality Control / QA Engineer",
+      "skills": ["quality control", "inspection", "iso", "testing", "documentation", "root cause", "corrective action", "statistical process control", "audit", "compliance"],
+      "transferable_to": ["mechanical_engineer", "production_engineer", "compliance_analyst"],
+      "keywords_summary": ["quality assurance", "inspection", "compliance", "continuous improvement"]
+    },
+    "maintenance_engineer": {
+      "display_name": "Maintenance Engineer",
+      "skills": ["maintenance", "troubleshooting", "preventive maintenance", "electrical", "mechanical", "plc", "safety", "documentation", "repair", "equipment"],
+      "transferable_to": ["mechanical_engineer", "technical_support", "production_engineer"],
+      "keywords_summary": ["maintenance", "equipment reliability", "troubleshooting", "preventive care"]
+    },
+    "backend_developer": {
+      "display_name": "Backend Developer",
+      "skills": ["python", "java", "node.js", "sql", "rest api", "mongodb", "postgresql", "redis", "docker", "linux", "microservices", "git"],
+      "transferable_to": ["software_engineer", "devops_engineer", "data_engineer"],
+      "keywords_summary": ["backend", "APIs", "databases", "server-side development"]
+    },
+    "devops_engineer": {
+      "display_name": "DevOps Engineer",
+      "skills": ["docker", "kubernetes", "aws", "ci/cd", "linux", "terraform", "jenkins", "ansible", "monitoring", "cloud", "scripting", "git"],
+      "transferable_to": ["backend_developer", "cloud_architect", "site_reliability"],
+      "keywords_summary": ["DevOps", "CI/CD", "cloud", "automation", "infrastructure"]
+    },
+    "data_analyst": {
+      "display_name": "Data Analyst",
+      "skills": ["sql", "excel", "python", "tableau", "power bi", "data visualization", "reporting", "statistics", "pandas", "analytics"],
+      "transferable_to": ["data_scientist", "business_analyst", "reporting_analyst"],
+      "keywords_summary": ["data analysis", "reporting", "visualization", "insights"]
+    },
+    "web_designer": {
+      "display_name": "Web Designer",
+      "skills": ["html", "css", "photoshop", "illustrator", "responsive", "wireframes", "ui", "ux", "wordpress", "graphic design"],
+      "transferable_to": ["ui_ux_designer", "frontend_developer", "digital_designer"],
+      "keywords_summary": ["web design", "visual design", "responsive", "user interface"]
+    },
+    "project_manager": {
+      "display_name": "Project Manager",
+      "skills": ["agile", "scrum", "jira", "leadership", "risk management", "stakeholder", "budget", "planning", "communication", "team", "delivery"],
+      "transferable_to": ["product_manager", "program_manager", "consultant"],
+      "keywords_summary": ["project delivery", "agile", "stakeholder management", "leadership"]
+    }
+  },
+  "layout_by_career": {
+    "frontend_developer": "two_column",
+    "ui_ux_designer": "modern_flow",
+    "qa_automation_engineer": "one_column",
+    "technical_support": "one_column",
+    "software_engineer": "two_column",
+    "full_stack_developer": "two_column",
+    "data_scientist": "two_column",
+    "mechanical_engineer": "one_column",
+    "production_engineer": "one_column",
+    "quality_control_engineer": "one_column",
+    "maintenance_engineer": "one_column",
+    "backend_developer": "two_column",
+    "devops_engineer": "two_column",
+    "data_analyst": "two_column",
+    "web_designer": "modern_flow",
+    "project_manager": "one_column"
+  },
+  "theme_by_career": {
+    "frontend_developer": "technical",
+    "ui_ux_designer": "creative",
+    "qa_automation_engineer": "corporate",
+    "technical_support": "corporate",
+    "software_engineer": "technical",
+    "full_stack_developer": "technical",
+    "data_scientist": "technical",
+    "mechanical_engineer": "corporate",
+    "production_engineer": "corporate",
+    "quality_control_engineer": "corporate",
+    "maintenance_engineer": "corporate",
+    "backend_developer": "technical",
+    "devops_engineer": "technical",
+    "data_analyst": "technical",
+    "web_designer": "creative",
+    "project_manager": "corporate"
+  }
+}

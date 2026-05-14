@@ -1,0 +1,12 @@
+/* Main CSS */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.container.mt-5.pt-5 {
+    flex: 1;
+}
+
+/* Add specialized styles here */

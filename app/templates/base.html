@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Talentryx Builder - Smart Resume Builder{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-color: #4a6fdc;
+            --secondary-color: #8c9eff;
+            --text-color: #333;
+            --bg-color: #f8f9fa;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #3b5acb;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="/"><i class="fas fa-file-alt me-2"></i>Talentryx
+                Builder</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    {% if session.get('user_id') %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('resume.dashboard') }}">Dashboard</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ session.get('username', 'User') }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}">Admin Dashboard</a>
+                            </li>
+                            <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">Profile</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item"><a class="nav-link btn btn-sm btn-outline-primary ms-2 px-3"
+                            href="{{ url_for('auth.login') }}">Login</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-sm btn-primary ms-2 px-3 text-white"
+                            href="{{ url_for('auth.register') }}">Register</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    {% block main %}
+    <div class="container mt-5 pt-5">
+        {% block content %}{% endblock %}
+    </div>
+    {% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+
+    <!-- SaaS Feedback System -->
+    <button id="feedback-btn" title="Give Feedback">
+        <i class="fas fa-comment-dots"></i> Give Feedback
+    </button>
+
+    <div class="feedback-overlay" id="feedback-overlay">
+        <div class="feedback-modal">
+            <button class="feedback-close" id="feedback-close"><i class="fas fa-times"></i></button>
+            
+            <div id="feedback-form-view">
+                <h3>We Value Your Feedback</h3>
+                <p>Help us improve your Talentryx experience.</p>
+                
+                <form id="feedback-form">
+                    <div class="star-rating">
+                        <input type="radio" id="star5" name="rating" value="5" /><label for="star5" title="5 stars"><i class="fas fa-star"></i></label>
+                        <input type="radio" id="star4" name="rating" value="4" /><label for="star4" title="4 stars"><i class="fas fa-star"></i></label>
+                        <input type="radio" id="star3" name="rating" value="3" /><label for="star3" title="3 stars"><i class="fas fa-star"></i></label>
+                        <input type="radio" id="star2" name="rating" value="2" /><label for="star2" title="2 stars"><i class="fas fa-star"></i></label>
+                        <input type="radio" id="star1" name="rating" value="1" /><label for="star1" title="1 star"><i class="fas fa-star"></i></label>
+                    </div>
+                    
+                    <div class="feedback-form-group">
+                        <label for="feedback-category">Category</label>
+                        <select id="feedback-category" name="category" class="feedback-form-control" required>
+                            <option value="" disabled selected>Select an option</option>
+                            <option value="UI/UX">UI/UX</option>
+                            <option value="AI Copilot">AI Copilot</option>
+                            <option value="Resume Templates">Resume Templates</option>
+                            <option value="Bugs/Issues">Bugs/Issues</option>
+                            <option value="Suggestions">Suggestions</option>
+                        </select>
+                    </div>
+                    
+                    <div class="feedback-form-group">
+                        <label for="feedback-message">Message</label>
+                        <textarea id="feedback-message" name="message" class="feedback-form-control" placeholder="What can we do better?" required></textarea>
+                    </div>
+                    
+                    <div class="feedback-form-group">
+                        <label for="feedback-email">Email (Optional)</label>
+                        <input type="email" id="feedback-email" name="email" class="feedback-form-control" placeholder="For follow-ups">
+                    </div>
+                    
+                    <button type="submit" class="feedback-submit" id="feedback-submit-btn">
+                        <span class="btn-text">Submit Feedback</span>
+                        <div class="spinner"></div>
+                    </button>
+                </form>
+            </div>
+            
+            <div class="feedback-success" id="feedback-success">
+                <div class="check-icon"><i class="fas fa-check"></i></div>
+                <h3>Thank You!</h3>
+                <p>Your feedback has been submitted successfully.</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

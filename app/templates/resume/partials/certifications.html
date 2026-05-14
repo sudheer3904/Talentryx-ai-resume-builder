@@ -1,0 +1,15 @@
+{% if sections.certifications %}
+<div class="section">
+    <h2 class="section-title">{{ t.headers.certifications|default('Certifications') }}</h2>
+    {% for c in sections.certifications %}
+    <div class="item">
+        <div class="item-header clearfix">
+            <span class="title">{{ c.name }}</span>
+        </div>
+        {% if c.issuer or c.link %}
+        <div class="item-sub">{{ c.issuer }}{% if c.link %} · {{ c.link }}{% endif %}</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}

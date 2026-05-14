@@ -1,0 +1,87 @@
+<!-- Analysis Result Modal -->
+<div class="modal fade" id="analysisModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title"><i class="fas fa-magic me-2"></i>AI Resume Analysis</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="analysis-loading" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Analyzing your resume against market trends...</p>
+                </div>
+
+                <div id="analysis-content" style="display: none;">
+                    <!-- ATS Score -->
+                    <h5 class="border-bottom pb-2 mb-3">ATS Score</h5>
+                    <div class="row align-items-center mb-4">
+                        <div class="col-md-4 text-center">
+                            <div style="position: relative; width: 120px; height: 120px; margin: 0 auto;">
+                                <svg viewBox="0 0 36 36" class="circular-chart" style="display: block; width: 100%;">
+                                    <path class="circle-bg"
+                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                        fill="none" stroke="#eee" stroke-width="3.8" />
+                                    <path class="circle" id="ats-circle" stroke-dasharray="0, 100"
+                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                        fill="none" stroke="#4a6fdc" stroke-width="3.8" stroke-linecap="round" />
+                                </svg>
+                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; font-weight: bold;"
+                                    id="ats-score-text">0</div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <ul class="list-group list-group-flush small" id="ats-checks">
+                                <!-- Checks injected here -->
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Job Recommendations -->
+                    <h5 class="border-bottom pb-2 mb-3">Top Job Matches</h5>
+                    <div id="job-recommendations" class="mb-4">
+                        <!-- Dynamic Content -->
+                    </div>
+
+                    <!-- Skill Gap Analysis -->
+                    <h5 class="border-bottom pb-2 mb-3">Skill Gap Analysis</h5>
+                    <div class="alert alert-info">
+                        <strong>Target Role:</strong> <span id="gap-role"></span>
+                    </div>
+                    <div class="mb-3" id="skill-gap-progress-wrap" style="display: none;">
+                        <label class="form-label small text-muted">Skill match</label>
+                        <div class="progress" style="height: 22px;">
+                            <div class="progress-bar bg-success" id="skill-gap-progress-bar" role="progressbar"
+                                style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success">Matching Skills</h6>
+                            <ul id="matching-skills" class="list-group list-group-flush mb-3"></ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-danger">Missing Skills</h6>
+                            <ul id="missing-skills" class="list-group list-group-flush mb-3"></ul>
+                        </div>
+                    </div>
+
+                    <!-- Course Recommendations -->
+                    <h5 class="border-bottom pb-2 mb-3 mt-3">Recommended Courses</h5>
+                    <div id="course-recommendations" class="row">
+                        <!-- Dynamic Content -->
+                    </div>
+
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

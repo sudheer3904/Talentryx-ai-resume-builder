@@ -1,0 +1,530 @@
+{% extends 'base.html' %}
+
+{% block title %}Editor - {{ resume.title }}{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/editor.css') }}">
+<link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+Tamil:wght@400;700&display=swap"
+    rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    /* Hide the global feedback button on the editor page */
+    #feedback-btn {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block main %}
+<div class="editor-main-wrapper d-flex flex-column"
+    style="height: calc(100vh - 56px); margin-top: 56px; overflow: hidden; width: 100%;">
+    <style>
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: #f8f9fa;
+        }
+
+        .centered-line-title {
+            position: relative;
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .centered-line-title span {
+            background: #fff;
+            padding: 0 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .centered-line-title:after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #eee;
+            z-index: 0;
+        }
+    </style>
+    <!-- Tools / Top Bar -->
+    <div class="editor-top-bar p-3 d-flex justify-content-between align-items-center flex-nowrap"
+        style="flex: 0 0 auto; z-index: 10; overflow-x: auto;">
+        <div class="pe-3" style="min-width: max-content;">
+            <h5 class="m-0 text-truncate">{{ resume.title }}</h5>
+            <small class="text-muted text-nowrap">Target Role: {{ resume.target_role }}</small>
+        </div>
+        <div class="d-flex align-items-center gap-1 flex-nowrap" style="min-width: max-content;">
+            <input type="file" id="import-resume-input" style="display: none;" accept=".pdf,.docx,.doc"
+                onchange="importResume(this)">
+
+            <button class="btn btn-sm btn-outline-secondary text-nowrap"
+                onclick="document.getElementById('import-resume-input').click()">
+                <i class="fas fa-file-upload me-1"></i> Import
+            </button>
+
+            <button class="btn btn-sm btn-outline-success text-nowrap" onclick="saveResume()">
+                <i class="fas fa-save me-1"></i> Save
+            </button>
+            <span id="save-status" class="text-muted small  text-nowrap"
+                style="min-width: 0px; text-align: center;"></span>
+
+            <button class="btn btn-sm btn-info text-white text-nowrap" onclick="analyzeResume()">
+                <i class="fas fa-magic me-1"></i> Analyze
+            </button>
+            <button class="btn btn-sm btn-success text-white text-nowrap" onclick="openSmartJobs()">
+                <i class="fas fa-briefcase me-1"></i> Smart Jobs
+            </button>
+            <button class="btn btn-sm btn-outline-primary text-nowrap" onclick="toggleCopilot()">
+                <i class="fas fa-robot me-1"></i> AI Assist
+            </button>
+
+            <select class="form-select form-select-sm d-inline-block w-auto text-nowrap" id="download-format"
+                title="Download format">
+                <option value="pdf">PDF</option>
+                <option value="docx">DOCX</option>
+                <option value="json">JSON</option>
+            </select>
+            <select class="form-select form-select-sm d-inline-block w-auto text-nowrap" id="download-style"
+                title="Layout style (PDF/DOCX)">
+                <option value="">Default</option>
+                <option value="corporate">Corporate (ATS)</option>
+                <option value="technical">Technical</option>
+                <option value="creative">Creative</option>
+                <option value="minimal">Minimal</option>
+                <option value="academic">Academic</option>
+            </select>
+
+            <button class="btn btn-sm btn-primary text-nowrap" onclick="downloadPDF()">
+                <i class="fas fa-download me-1"></i> Download
+            </button>
+            <a href="{{ url_for('multi_career.multi_career_page', resume_id=resume.id) }}"
+                class="btn btn-sm btn-outline-info text-nowrap">
+                <i class="fas fa-briefcase me-1"></i> Multi-Career
+            </a>
+            <a href="{{ url_for('resume.templates_gallery', resume_id=resume.id) }}"
+                class="btn btn-sm btn-outline-warning text-dark text-nowrap">
+                <i class="fas fa-th-large me-1"></i> Templates
+            </a>
+            <a href="{{ url_for('resume.dashboard') }}" class="btn btn-sm btn-secondary text-nowrap">
+                <i class="fas fa-times me-1"></i> Close
+            </a>
+        </div>
+    </div>
+
+    <div class="editor-container p-0 flex-grow-1 d-flex">
+        <!-- Editor Sidebar -->
+        <div class="editor-sidebar">
+            <div class="accordion" id="resumeSections">
+
+                <!-- Resume Design -->
+                <div class="section-card">
+                    <div class="section-header" onclick="toggleSection('design')">
+                        <span><i class="fas fa-palette me-2"></i>{{ t.headers.design }}</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="section-body" id="sec-design">
+                        <form id="form-design">
+                            <div class="mb-2">
+                                <label>Language</label>
+                                <select class="form-select" name="language" id="resume-language-selector">
+                                    <option value="English" {% if resume.language=='English' %}selected{% endif %}>
+                                        English</option>
+                                    <option value="Tamil" {% if resume.language=='Tamil' %}selected{% endif %}>Tamil
+                                    </option>
+                                    <option value="Hindi" {% if resume.language=='Hindi' %}selected{% endif %}>Hindi
+                                    </option>
+                                    <option value="Spanish" {% if resume.language=='Spanish' %}selected{% endif %}>
+                                        Spanish</option>
+                                    <option value="French" {% if resume.language=='French' %}selected{% endif %}>French
+                                    </option>
+                                    <option value="German" {% if resume.language=='German' %}selected{% endif %}>German
+                                    </option>
+                                    <option value="Mandarin" {% if resume.language=='Mandarin' %}selected{% endif %}>
+                                        Mandarin</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label>Font Family</label>
+                                <select class="form-select" name="font">
+                                    <option value="'Noto Sans', 'Noto Sans Devanagari', 'Noto Sans Tamil', sans-serif">
+                                        Noto Sans (Unicode/Multi-language)</option>
+                                    <option value="'Helvetica', 'Arial', sans-serif">Helvetica / Arial</option>
+                                    <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                                    <option value="'Georgia', serif">Georgia</option>
+                                    <option value="'Verdana', Geneva, sans-serif">Verdana</option>
+                                    <option value="'Courier New', Courier, monospace">Courier New</option>
+                                    <option value="'Palatino Linotype', 'Book Antiqua', Palatino, serif">Palatino
+                                    </option>
+                                    <option value="'Garamond', 'EB Garamond', serif">Garamond</option>
+                                    <option value="'Trebuchet MS', Helvetica, sans-serif">Trebuchet MS</option>
+                                    <option value="'Tahoma', Geneva, sans-serif">Tahoma</option>
+                                    <option value="'Lucida Sans', 'Lucida Grande', sans-serif">Lucida Sans</option>
+                                    <option value="'Cambria', Georgia, serif">Cambria</option>
+                                    <option value="'Calibri', 'Segoe UI', sans-serif">Calibri</option>
+                                    <option value="'Segoe UI', Tahoma, sans-serif">Segoe UI</option>
+                                    <option value="'Arial Narrow', Arial, sans-serif">Arial Narrow</option>
+                                    <option value="'Century Gothic', sans-serif">Century Gothic</option>
+                                    <option value="'Bookman Old Style', serif">Bookman Old Style</option>
+                                    <option value="'Franklin Gothic Medium', sans-serif">Franklin Gothic</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label>Accent Color</label>
+                                <input type="color" class="form-control form-control-color" name="color" value="#3498db"
+                                    title="Choose your color">
+                            </div>
+
+
+                            <div class="mb-3">
+                                <label>Base Layout <small>(Preview Engine)</small></label>
+                                <select class="form-select" name="layout" id="baseLayoutSelector">
+                                    <option value="one_column" data-t="labels.layout_one_column">One Column (ATS)
+                                    </option>
+                                    <option value="two_column" data-t="labels.layout_two_column">Two Column (Modern)
+                                    </option>
+                                    <option value="mixed_column" data-t="labels.layout_mixed_column">Mixed Column
+                                        (Hybrid)</option>
+                                    <option value="modern_flow" data-t="labels.layout_modern_flow">Modern Flow (Pro)
+                                    </option>
+                                    <option value="compact" data-t="labels.layout_compact">Compact (One Column)</option>
+                                    <option value="minimal_layout" data-t="labels.layout_minimal">Minimal</option>
+                                </select>
+                            </div>
+                            <div class="row">
+                                <div class="col-6 mb-2">
+                                    <label>Font Size (pt)</label>
+                                    <input type="number" class="form-control" name="fontSize" value="11" min="8"
+                                        max="40">
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <label>Spacing</label>
+                                    <input type="number" class="form-control" name="spacing" value="1.5" step="0.1"
+                                        min="1.0" max="2.0">
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <h6>Text Styling</h6>
+                                <small class="text-muted d-block mb-2">For section headings and subheadings (overall).
+                                    For bold/italic/shadow on specific lines, select text in Experience or Projects and
+                                    use the toolbar.</small>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="boldHeadings"
+                                        id="boldHeadings">
+                                    <label class="form-check-label" for="boldHeadings">{{ t.labels.bold_headings
+                                        }}</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="italicSubs" id="italicSubs">
+                                    <label class="form-check-label" for="italicSubs">{{ t.labels.italic_subs }}</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="textShadow" id="textShadow">
+                                    <label class="form-check-label" for="textShadow">{{ t.labels.text_shadow }}</label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Personal Details -->
+                <div class="section-card">
+                    <div class="section-header" onclick="toggleSection('personal')">
+                        <span><i class="fas fa-user me-2"></i>{{ t.headers.personal }}</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="section-body active" id="sec-personal">
+                        <form id="form-personal">
+                            <!-- Photo Upload -->
+                            <div class="mb-3 text-center">
+                                <div class="photo-preview-box mb-2" id="photo-preview"
+                                    style="width: 80px; height: 80px; border-radius: 50%; background: #eee; margin: 0 auto; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-camera text-muted"></i>
+                                </div>
+                                <input type="file" class="form-control form-control-sm" id="photo-input"
+                                    accept="image/*">
+                                <small class="text-muted d-block mt-1">Optional Profile Photo</small>
+                            </div>
+
+                            <div class="mb-2">
+                                <label>{{ t.labels.full_name }}</label>
+                                <input type="text" class="form-control" name="full_name" placeholder="John Doe">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label>Email</label>
+                                    <input type="email" class="form-control" name="email"
+                                        placeholder="john@example.com">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label>{{ t.labels.phone }}</label>
+                                    <input type="text" class="form-control" name="phone" placeholder="+1 234 567 890">
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label>{{ t.labels.location }}</label>
+                                <input type="text" class="form-control" name="location"
+                                    placeholder="{{ t.placeholders.location }}">
+                            </div>
+                            <div class="mb-2">
+                                <label>{{ t.labels.linkedin }}</label>
+                                <input type="text" class="form-control" name="linkedin"
+                                    placeholder="{{ t.placeholders.linkedin }}">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label>{{ t.labels.github }}</label>
+                                    <input type="text" class="form-control" name="github"
+                                        placeholder="{{ t.placeholders.github }}">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label>{{ t.labels.portfolio }}</label>
+                                    <input type="text" class="form-control" name="portfolio"
+                                        placeholder="{{ t.placeholders.portfolio }}">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Professional Summary -->
+                <div class="section-card">
+                    <div class="section-header" onclick="toggleSection('summary')">
+                        <span><i class="fas fa-user-tie me-2"></i>{{ t.headers.summary }}</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="section-body" id="sec-summary">
+                        <div id="quill-summary" class="quill-editor bg-white mb-2 frosted-glass" style="height: 150px; border-radius: 8px;"></div>
+                    </div>
+                </div>
+
+                <!-- Education -->
+                <div class="section-card">
+                    <div class="section-header" onclick="toggleSection('education')">
+                        <span><i class="fas fa-graduation-cap me-2"></i>{{ t.headers.education }}</span>
+                        <button class="btn btn-sm btn-outline-primary py-0" onclick="addItem('education', event)">+
+                            Add</button>
+                    </div>
+                    <div class="section-body" id="sec-education">
+                        <div id="list-education"></div>
+                    </div>
+                </div>
+
+                <!-- Experience -->
+                <div class="section-card">
+                    <div class="section-header" onclick="toggleSection('experience')">
+                        <span><i class="fas fa-briefcase me-2"></i>{{ t.headers.experience }}</span>
+                        <button class="btn btn-sm btn-outline-primary py-0" onclick="addItem('experience', event)">+
+                            Add</button>
+                    </div>
+                    <div class="section-body" id="sec-experience">
+                        <div id="list-experience"></div>
+                    </div>
+                </div>
+
+                <!-- Skills -->
+                <div class="section-card">
+                    <div class="section-header" onclick="toggleSection('skills')">
+                        <span><i class="fas fa-tools me-2"></i>{{ t.headers.skills }}</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="section-body" id="sec-skills">
+                        <div class="mb-2">
+                            <label>{{ t.labels.tech_skills }}</label>
+                            <div id="quill-skills_tech" class="quill-editor bg-white mb-2 frosted-glass" style="height: 100px; border-radius: 8px;"></div>
+                        </div>
+                        <div class="mb-2">
+                            <label>{{ t.labels.soft_skills }}</label>
+                            <div id="quill-skills_soft" class="quill-editor bg-white mb-2 frosted-glass" style="height: 100px; border-radius: 8px;"></div>
+                        </div>
+                        <div class="mb-2">
+                            <label>{{ t.labels.languages }}</label>
+                            <div id="quill-skills_languages" class="quill-editor bg-white mb-2 frosted-glass" style="height: 100px; border-radius: 8px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projects -->
+                <div class="section-card">
+                    <div class="section-header" onclick="toggleSection('projects')">
+                        <span><i class="fas fa-project-diagram me-2"></i>{{ t.headers.projects }}</span>
+                        <button class="btn btn-sm btn-outline-primary py-0" onclick="addItem('projects', event)">+
+                            Add</button>
+                    </div>
+                    <div class="section-body" id="sec-projects">
+                        <div id="list-projects"></div>
+                    </div>
+                </div>
+
+                <!-- Certifications -->
+                <div class="section-card">
+                    <div class="section-header" onclick="toggleSection('certifications')">
+                        <span><i class="fas fa-award me-2"></i>Certifications</span>
+                        <button class="btn btn-sm btn-outline-primary py-0" onclick="addItem('certifications', event)">+
+                            Add</button>
+                    </div>
+                    <div class="section-body" id="sec-certifications">
+                        <div id="list-certifications"></div>
+                    </div>
+                </div>
+
+                <!-- Hobbies -->
+                <div class="section-card">
+                    <div class="section-header" onclick="toggleSection('hobbies')">
+                        <span><i class="fas fa-heart me-2"></i>{{ t.headers.hobbies }}</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="section-body" id="sec-hobbies">
+                        <div class="mb-2">
+                            <div id="quill-hobbies" class="quill-editor bg-white mb-2 frosted-glass" style="height: 100px; border-radius: 8px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Evidence Locker -->
+                <div class="section-card">
+                    <div class="section-header" onclick="toggleSection('evidence')">
+                        <span><i class="fas fa-folder-open me-2"></i>Evidence Locker</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="section-body" id="sec-evidence">
+                        <p class="small text-muted">Attach certificate links or proof for claims.</p>
+                        <div id="evidence-list"></div>
+                        <button class="btn btn-sm btn-outline-secondary mt-2" onclick="addEvidenceClaim()">+ Add
+                            evidence</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Preview Area -->
+        <div class="editor-preview flex-grow-1">
+            <div class="resume-paper" id="resume-preview">
+                <!-- Preview Content Injected Here -->
+                <div class="preview-header">
+                    <div class="preview-name" id="prev-name">YOUR NAME</div>
+                    <div class="preview-contact" id="prev-contact">email@example.com | 123-456-7890</div>
+                </div>
+
+                <div id="prev-content">
+                    <!-- Dynamic Sections -->
+                </div>
+
+                <div id="qr-code-container"></div>
+            </div>
+        </div>
+
+        <!-- AI Copilot Panel -->
+        <div class="editor-copilot" id="ai-copilot-panel">
+            <div class="copilot-header">
+                <h6 class="m-0 fw-bold">AI Career Coach 🤖</h6>
+                <button type="button" class="btn-close" onclick="toggleCopilot()" aria-label="Close"></button>
+            </div>
+
+            <div class="copilot-body chat-container">
+                <div class="chat-suggestions" id="chat-suggestions">
+                    <div class="chat-suggestion-chip" onclick="sendChatFromChip('Improve this section')">Improve this
+                        section</div>
+                    <div class="chat-suggestion-chip" onclick="sendChatFromChip('Make it ATS-friendly')">Make it
+                        ATS-friendly</div>
+                    <div class="chat-suggestion-chip" onclick="sendChatFromChip('Add metrics')">Add metrics</div>
+                </div>
+
+                <div class="chat-history" id="chat-history">
+                    <div class="chat-message ai">
+                        Hi! I'm your AI Career Coach. Highlight any text on the left, or just tell me what you need, and
+                        I'll help you write an impactful resume!
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <div id="copilot-selected-context" class="small text-muted mb-1"
+                        style="display:none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        <i class="fas fa-quote-left me-1"></i> <span id="copilot-selected-text"></span>
+                    </div>
+                    <div class="chat-input-box">
+                        <textarea id="copilot-chat-input" class="form-control" rows="1"
+                            placeholder="Ask AI... (Press Shift+Enter for new line)"
+                            onkeydown="handleChatKeydown(event)"></textarea>
+                        <button class="btn btn-primary" onclick="sendChatMessage()"><i
+                                class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'resume/analysis_modal.html' %}
+{% include 'resume/smart_jobs_modal.html' %}
+
+
+<script id="editor-data" type="application/json">
+{
+    "resumeId": {{ resume.id | default('null') | tojson }},
+    "translations": {{ t | default({}) | tojson }},
+    "sections": {{ sections | default([]) | tojson }},
+    "design": {{ (resume.design or {}) | tojson }},
+    "photoPath": {{ (resume.photo_path or '') | tojson }}
+}
+</script>
+<script>
+    const _editorDataEl = document.getElementById('editor-data');
+    const _editorData = JSON.parse(_editorDataEl.textContent);
+    const RESUME_ID = _editorData.resumeId;
+    const TRANSLATIONS = _editorData.translations;
+    const INITIAL_SECTIONS = _editorData.sections;
+    const INITIAL_DESIGN = _editorData.design;
+    const INITIAL_PHOTO = _editorData.photoPath;
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script src="{{ url_for('static', filename='js/editor.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const inlineTmpl = document.getElementById('inlineTemplateSelector');
+        if (inlineTmpl) {
+            inlineTmpl.addEventListener('change', function (e) {
+                if (!e.target.value) return;
+
+                // Show a quick loading state
+                e.target.disabled = true;
+
+                // Save any current edits before changing template
+                saveResume(true).then(() => {
+                    fetch(`{{ url_for('resume.select_template', resume_id=resume.id, template_name='__TMPL__') }}`.replace('__TMPL__', e.target.value), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                window.location.reload();
+                            } else {
+                                alert("Error: " + data.message);
+                                e.target.disabled = false;
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            alert("An error occurred");
+                            e.target.disabled = false;
+                        });
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

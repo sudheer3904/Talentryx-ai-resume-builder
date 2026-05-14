@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}Mock Interview{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow" style="height: 500px; display: flex; flex-direction: column;">
+            <div class="card-header bg-dark text-white d-flex justify-content-between">
+                <span>Mock Interview - {{ role|title }}</span>
+                <button class="btn btn-sm btn-light" onclick="endInterview()">End</button>
+            </div>
+            <div class="card-body" id="chat-box" style="flex: 1; overflow-y: auto; background: #f8f9fa;">
+                <div class="d-flex flex-row justify-content-start mb-4">
+                    <div class="p-3 ms-3" style="border-radius: 15px; background-color: rgba(57, 192, 237,.2);">
+                        <p class="small mb-0">Hello! I'm your AI interviewer. Are you ready to begin?</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-muted d-flex justify-content-start align-items-center p-3">
+                <input type="text" class="form-control form-control-lg" id="user-input"
+                    placeholder="Type your answer...">
+                <button class="btn btn-primary ms-2" onclick="sendAnswer()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentQuestion = '';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        getQuestion();
+    });
+
+    async function getQuestion() {
+        const response = await fetch("{{ url_for('interview.next_question') }}", { method: 'POST' });
+        const data = await response.json();
+
+        if (data.status === 'continue') {
+            currentQuestion = data.question;
+            appendMessage('ai', data.question);
+        } else {
+            appendMessage('ai', data.message || 'Interview complete!');
+            document.getElementById('user-input').disabled = true;
+            await fetch("{{ url_for('interview.finish') }}", { method: 'POST' });
+        }
+    }
+
+    async function sendAnswer() {
+        const input = document.getElementById('user-input');
+        const text = input.value.trim();
+        if (!text) return;
+
+        appendMessage('user', text);
+        input.value = '';
+
+        const res = await fetch("{{ url_for('interview.submit_answer') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ answer: text, question: currentQuestion })
+        });
+        const data = await res.json();
+        if (data.feedback && data.feedback !== 'Good answer.') {
+            appendMessage('ai', 'Feedback: ' + data.feedback);
+        }
+
+        setTimeout(getQuestion, 800);
+    }
+
+    function appendMessage(sender, text) {
+        const chatBox = document.getElementById('chat-box');
+        const div = document.createElement('div');
+        div.className = sender === 'user' ? "d-flex flex-row justify-content-end mb-4" : "d-flex flex-row justify-content-start mb-4";
+
+        const content = sender === 'user'
+            ? `<div class="p-3 me-3 border" style="border-radius: 15px; background-color: #fbfbfb;"><p class="small mb-0">${text}</p></div>`
+            : `<div class="p-3 ms-3" style="border-radius: 15px; background-color: rgba(57, 192, 237,.2);"><p class="small mb-0">${text}</p></div>`;
+
+        div.innerHTML = content;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function endInterview() {
+        window.location.href = "{{ url_for('resume.dashboard') }}";
+    }
+</script>
+{% endblock %}

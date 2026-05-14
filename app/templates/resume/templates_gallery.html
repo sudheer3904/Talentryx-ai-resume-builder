@@ -1,0 +1,636 @@
+{% extends 'base.html' %}
+
+{% block title %}Resume Templates Gallery{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Filters - Premium Glassmorphism */
+    .filters {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 50px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 50px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    }
+    .filter-btn {
+        padding: 10px 25px;
+        border-radius: 30px;
+        border: 2px solid #eaeeef;
+        background: white;
+        color: #5d6d7e;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .filter-btn:hover, .filter-btn.active {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        color: #fff;
+        border-color: transparent;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+    }
+
+    /* Template Card - Premium Feel */
+    .template-card {
+        background: #fff;
+        border-radius: 16px;
+        overflow: hidden;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.04);
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        position: relative;
+        border: 1px solid rgba(0,0,0,0.02);
+    }
+    .template-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        z-index: 10;
+    }
+    
+    .iframe-container {
+        width: 100%;
+        height: 320px;
+        overflow: hidden;
+        position: relative;
+        background-color: #f7f9fa;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+    }
+    
+    .template-preview-iframe {
+        width: 800px;
+        height: 1131px;
+        transform-origin: top center;
+        transform: scale(0.38); /* perfectly fits most containers */
+        border: none;
+        background-color: white;
+        pointer-events: none;
+        box-shadow: 0 0 20px rgba(0,0,0,0.05);
+    }
+    
+    .template-preview-img {
+        width: 100%;
+        height: 320px;
+        object-fit: cover;
+        object-position: top;
+    }
+    
+    .template-card .template-actions {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 320px; /* Only covers the preview area */
+        background: rgba(33, 47, 61, 0.75);
+        backdrop-filter: blur(4px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        opacity: 0;
+        transition: all 0.3s ease;
+        z-index: 15;
+    }
+    
+    .template-card:hover .template-actions {
+        opacity: 1;
+    }
+    
+    .action-btn {
+        width: 80%;
+        margin-bottom: 12px;
+        padding: 12px;
+        border-radius: 10px;
+        font-weight: 700;
+        border: none;
+        transform: translateY(20px);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    .template-card:hover .action-btn {
+        transform: translateY(0);
+    }
+    
+    .action-btn-preview {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 2px solid white !important;
+    }
+    .action-btn-preview:hover {
+        background: white;
+        color: #2c3e50;
+    }
+    
+    .template-info {
+        padding: 20px 15px;
+        text-align: left;
+        background: #fff;
+        border-top: 1px solid rgba(0,0,0,0.03);
+    }
+    .template-name {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #1a252f;
+        margin-bottom: 4px;
+        letter-spacing: -0.5px;
+        text-transform: capitalize;
+    }
+    .template-category {
+        font-size: 0.8rem;
+        color: #95a5a6;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    /* Badge system */
+    .template-badge {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        z-index: 10;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .badge-pro { background: #f1c40f; color: #7f6000; }
+    .badge-new { background: #3498db; color: #fff; }
+    .badge-trending { background: #e74c3c; color: #fff; }
+
+    .selected-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: #2ecc71;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        display: none;
+        z-index: 20;
+    }
+
+    .selected-template {
+        outline: 4px solid #2ecc71;
+        outline-offset: -4px;
+    }
+
+    .selected-template .selected-badge {
+        display: block;
+    }
+
+    .gallery-container {
+        padding-top: 120px;
+        padding-bottom: 80px;
+        background-color: #f8fbff;
+        min-height: 100vh;
+    }
+    .gallery-header {
+        text-align: center;
+        margin-bottom: 60px;
+    }
+    .gallery-header h1 {
+        font-size: 3.5rem;
+        font-weight: 900;
+        color: #2c3e50;
+        margin-bottom: 15px;
+        letter-spacing: -2px;
+    }
+    .gallery-header p {
+        font-size: 1.3rem;
+        color: #7f8c8d;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .section-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #2c3e50;
+        margin: 60px 0 30px;
+        position: relative;
+        display: inline-block;
+    }
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 60px;
+        height: 6px;
+        background: #2ecc71;
+        border-radius: 10px;
+    }
+
+    #searchBar {
+        max-width: 600px;
+        border-radius: 40px;
+        padding: 15px 30px;
+        border: 2px solid #eee;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        background: #fff;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+</style>
+{% endblock %}
+
+{% block main %}
+<div class="gallery-container">
+    <div class="container">
+        
+        <!-- Header -->
+        <div class="gallery-header">
+            <h1>Choose Your Template</h1>
+            <p>Pick a professional design to start your career journey</p>
+            {% if resume %}
+            <a href="{{ url_for('resume.editor', resume_id=resume.id) }}" class="btn btn-outline-secondary mt-3">
+                <i class="fas fa-arrow-left"></i> Back to Editor
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Search Bar -->
+        <div class="text-center mb-5">
+            <input type="text" id="searchBar" class="form-control mx-auto" placeholder="🔍 Search templates by name..." onkeyup="searchTemplates()">
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <button class="filter-btn active" data-filter="all" onclick="filterTemplates('all')">All</button>
+            <button class="filter-btn" data-filter="Professional" onclick="filterTemplates('Professional')">Professional</button>
+            <button class="filter-btn" data-filter="Modern" onclick="filterTemplates('Modern')">Modern</button>
+            <button class="filter-btn" data-filter="Creative" onclick="filterTemplates('Creative')">Creative</button>
+            <button class="filter-btn" data-filter="Minimal" onclick="filterTemplates('Minimal')">Minimal</button>
+            <button class="filter-btn" data-filter="ats" onclick="filterTemplates('ats')">ATS-Friendly</button>
+        </div>
+
+        <!-- Recommended Section -->
+        <h3 class="section-title">Recommended for You</h3>
+        <div class="row" id="recommendedGrid">
+            {% set rec_counter = 0 %}
+            {% for cat_name, templates in categories.items() if cat_name in ['Professional', 'Modern'] %}
+                {% for tmpl in templates if rec_counter < 4 %}
+                    {% set active_class = '' %}
+                    {% if resume and resume.design and resume.design.template == tmpl %}
+                        {% set active_class = 'selected-template' %}
+                    {% endif %}
+                    
+                    <div class="col-12 col-md-6 col-lg-3 mb-4">
+                        <div class="template-card {{ active_class }}" data-tmpl="{{ tmpl }}">
+                            <div class="template-badge badge-pro">POPULAR</div>
+                            <div class="selected-badge"><i class="fas fa-check"></i> Selected</div>
+                            <div class="iframe-container" data-tmpl="{{ tmpl }}">
+                                <img src="{{ url_for('static', filename='template_previews/' + tmpl + '.png') }}" alt="{{ tmpl|replace('_', ' ') }}" class="template-preview-img" loading="lazy">
+                            </div>
+                            <div class="template-actions">
+                                <button class="action-btn action-btn-preview" onclick="previewTemplate('{{ tmpl }}')">
+                                    <i class="fas fa-expand-alt"></i> Preview
+                                </button>
+                                <button class="action-btn btn-success" onclick="applyTemplate('{{ tmpl }}', this)">
+                                    <i class="fas fa-check"></i> Use Template
+                                </button>
+                            </div>
+                            <div class="template-info">
+                                <h3 class="template-name">{{ tmpl|replace('_', ' ') }}</h3>
+                                <p class="template-category">{{ cat_name }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% set rec_counter = rec_counter + 1 %}
+                {% endfor %}
+            {% endfor %}
+        </div>
+
+        <!-- Trending Section -->
+        <h3 class="section-title">Trending Designs</h3>
+        <div class="row">
+            {% set trend_counter = 0 %}
+            {% for cat_name, templates in categories.items() if cat_name in ['Creative', 'Generic'] %}
+                {% for tmpl in templates if trend_counter < 4 %}
+                    {% set active_class = '' %}
+                    {% if resume and resume.design and resume.design.template == tmpl %}
+                        {% set active_class = 'selected-template' %}
+                    {% endif %}
+                    
+                    <div class="col-12 col-md-6 col-lg-3 mb-4">
+                        <div class="template-card {{ active_class }}" data-tmpl="{{ tmpl }}">
+                            <div class="template-badge badge-trending">TRENDING</div>
+                            <div class="selected-badge"><i class="fas fa-check"></i> Selected</div>
+                            <div class="iframe-container" data-tmpl="{{ tmpl }}">
+                                <img src="{{ url_for('static', filename='template_previews/' + tmpl + '.png') }}" alt="{{ tmpl|replace('_', ' ') }}" class="template-preview-img" loading="lazy">
+                            </div>
+                            <div class="template-actions">
+                                <button class="action-btn action-btn-preview" onclick="previewTemplate('{{ tmpl }}')">
+                                    <i class="fas fa-expand-alt"></i> Preview
+                                </button>
+                                <button class="action-btn btn-success" onclick="applyTemplate('{{ tmpl }}', this)">
+                                    <i class="fas fa-check"></i> Use Template
+                                </button>
+                            </div>
+                            <div class="template-info">
+                                <h3 class="template-name">{{ tmpl|replace('_', ' ') }}</h3>
+                                <p class="template-category">{{ cat_name }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% set trend_counter = trend_counter + 1 %}
+                {% endfor %}
+            {% endfor %}
+        </div>
+
+        <!-- All Templates Grid -->
+        <h3 class="section-title">All Templates</h3>
+        <div class="row" id="templateGrid">
+            {% for cat_name, templates in categories.items() %}
+                {% for tmpl in templates %}
+                    {% set active_class = '' %}
+                    {% if resume and resume.design and resume.design.template == tmpl %}
+                        {% set active_class = 'selected-template' %}
+                    {% endif %}
+                    
+                    {% set is_ats = 'false' %}
+                    {% if 'ats' in tmpl or 'compact' in tmpl or 'minimal' in tmpl or cat_name in ['Professional', 'Compact', 'Minimal'] %}
+                        {% set is_ats = 'true' %}
+                    {% endif %}
+                    
+                    <div class="col-12 col-md-6 col-lg-3 mb-4 template-grid-item" data-category="{{ cat_name }}" data-is-ats="{{ is_ats }}" data-name="{{ tmpl|replace('_', ' ')|lower }}">
+                        <div class="template-card {{ active_class }}" data-tmpl="{{ tmpl }}">
+                            {% if loop.index % 9 == 0 %}
+                            <div class="template-badge badge-new">NEW</div>
+                            {% endif %}
+                            <div class="selected-badge"><i class="fas fa-check"></i> Selected</div>
+                            <div class="iframe-container" data-tmpl="{{ tmpl }}">
+                                <img src="{{ url_for('static', filename='template_previews/' + tmpl + '.png') }}" alt="{{ tmpl|replace('_', ' ') }}" class="template-preview-img" loading="lazy">
+                            </div>
+                            <div class="template-actions">
+                                <button class="action-btn action-btn-preview" onclick="previewTemplate('{{ tmpl }}')">
+                                    <i class="fas fa-expand-alt"></i> Preview
+                                </button>
+                                <button class="action-btn btn-success" onclick="applyTemplate('{{ tmpl }}', this)">
+                                    <i class="fas fa-check"></i> Use Template
+                                </button>
+                            </div>
+                            <div class="template-info">
+                                <h3 class="template-name">{{ tmpl|replace('_', ' ') }}</h3>
+                                <p class="template-category">{{ cat_name }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.2);">
+      <div class="modal-header" style="background: #f8fbff; border-bottom: 1px solid #eee;">
+        <h5 class="modal-title fw-bold" id="previewModalTitle">Template Preview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0">
+        <iframe id="previewIframe" src="" style="width: 100%; height: 75vh; border: none;"></iframe>
+      </div>
+      <div class="modal-footer" style="background: #f8fbff; border-top: 1px solid #eee;">
+        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success px-4 fw-bold" id="btnUseTemplatePreview">Apply This Template</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // System to cache and generate Dummy Data
+    let dummyResumes = [];
+    let templateHtmlCache = {};
+
+    const dummyFirstNames = ["Alex", "Jordan", "Taylor", "Casey", "Morgan", "Riley", "Cameron", "Quinn", "Jamie", "Skyler", "Peyton"];
+    const dummyLastNames = ["Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor", "Anderson"];
+    const dummyRoles = ["Software Engineer", "Marketing Manager", "Data Scientist", "Product Designer", "Operations Director", "Financial Analyst", "UX Researcher", "Sales Executive", "Cloud Architect", "Project Lead"];
+    const dummyCompanies = ["TechCorp", "Innovate LLC", "Global Solutions", "Acme Corp", "Startup Inc", "Nexus Systems", "CloudNet", "Future Dynamics", "Vertex Solutions"];
+
+    function generateDummyResume(index) {
+        const fname = dummyFirstNames[(index * 3) % dummyFirstNames.length];
+        const lname = dummyLastNames[(index * 5) % dummyLastNames.length];
+        const role = dummyRoles[(index * 7) % dummyRoles.length];
+        const company = dummyCompanies[(index * 11) % dummyCompanies.length];
+        
+        return {
+            design: {
+                color: ["#3498db", "#2ecc71", "#e74c3c", "#9b59b6", "#34495e", "#f39c12", "#1abc9c", "#d35400"][index % 8],
+                font: ["Helvetica", "Georgia", "Inter", "Roboto", "Outfit"][index % 5],
+                fontSize: 11,
+                spacing: 1.5
+            },
+            language: "English",
+            personal: {
+                full_name: `${fname} ${lname}`,
+                role: role,
+                email: `${fname.toLowerCase()}.${lname.toLowerCase()}@example.com`,
+                phone: "+1 555 123 456" + (index%10),
+                location: index % 2 === 0 ? "New York, NY" : "San Francisco, CA",
+                summary: `High-performing ${role} with over ${5 + (index % 10)} years of experience in ${company} and related tech sectors. Specialized in building scalable systems and managing cross-functional teams to exceed business objectives.`,
+            },
+            experience: [
+                {
+                    company: company,
+                    role: role,
+                    start: "2020",
+                    end: "Present",
+                    description: "<ul><li>Led innovation initiatives resulting in 25% revenue growth.</li><li>Architected new internal systems used by over 500+ employees globally.</li><li>Optimized existing workflows to reduce operational costs by 15% annually.</li></ul>"
+                },
+                {
+                    company: "Predecessor Inc",
+                    role: "Senior Associate",
+                    start: "2017",
+                    end: "2020",
+                    description: "<ul><li>Managed a team of 5 developers to deliver a core product feature.</li><li>Reduced bug reports by 40% through rigorous automated testing implementations.</li></ul>"
+                }
+            ],
+            education: [
+                {
+                    institution: "Institute of Technology",
+                    degree: "Master of Science",
+                    year: "2015 - 2017",
+                    score: "3.9/4.0"
+                }
+            ],
+            skills: {
+                skills_tech: ["React, Node.js, AWS, Python, SQL", "Marketing, SEO, Google Analytics, Strategy", "Design, Figma, UI/UX, Adobe Creative Suite"][index % 3],
+                skills_soft: "Leadership, Critical Thinking, Collaborative Problem Solving"
+            },
+            projects: [
+                {
+                    title: "Scaleable Backend Architecture",
+                    tech: "Node.js, Redis, MongoDB",
+                    description: "Designed a high-availability backend system for 1M+ concurrent users."
+                }
+            ]
+        };
+    }
+
+    // Pre-generate profiles
+    for (let i = 0; i < 50; i++) {
+        dummyResumes.push(generateDummyResume(i));
+    }
+
+    function loadIframeForCard(container) {
+        const tmpl = container.dataset.tmpl;
+        const dummyIndex = Array.from(tmpl).reduce((acc, char) => acc + char.charCodeAt(0), 0) % 50;
+        
+        const iframe = document.createElement('iframe');
+        iframe.className = 'template-preview-iframe';
+        const fallbackImg = container.querySelector('.template-preview-img');
+        if (fallbackImg) fallbackImg.style.display = 'none';
+
+        if (templateHtmlCache[tmpl]) {
+            iframe.srcdoc = templateHtmlCache[tmpl];
+            container.appendChild(iframe);
+            return;
+        }
+
+        container.appendChild(iframe);
+        
+        fetch(`/api/render-dummy-template/${tmpl}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                resume: dummyResumes[dummyIndex],
+                sections: dummyResumes[dummyIndex]
+            })
+        })
+        .then(res => res.text())
+        .then(html => {
+            templateHtmlCache[tmpl] = html;
+            iframe.srcdoc = html;
+        })
+        .catch(err => {
+            console.error("Failed to load dummy html:", err);
+            if (fallbackImg) fallbackImg.style.display = 'block';
+            iframe.remove();
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const container = entry.target;
+                    if (!container.dataset.loaded) {
+                        container.dataset.loaded = 'true';
+                        loadIframeForCard(container);
+                    }
+                    observer.unobserve(container);
+                }
+            });
+        }, { rootMargin: "600px" });
+
+        document.querySelectorAll('.iframe-container').forEach(c => observer.observe(c));
+    });
+
+    function searchTemplates() {
+        let input = document.getElementById('searchBar').value.toLowerCase();
+        let items = document.querySelectorAll('.template-grid-item');
+        items.forEach(item => {
+            item.style.display = item.getAttribute('data-name').includes(input) ? "block" : "none";
+        });
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    }
+
+    function filterTemplates(category) {
+        document.getElementById('searchBar').value = '';
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-filter') === category);
+        });
+        let items = document.querySelectorAll('.template-grid-item');
+        items.forEach(item => {
+            const matches = category === 'all' || 
+                          (category === 'ats' && item.getAttribute('data-is-ats') === 'true') ||
+                          (item.getAttribute('data-category') === category);
+            item.style.display = matches ? "block" : "none";
+        });
+    }
+
+    function previewTemplate(templateName) {
+        let titleName = templateName.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        document.getElementById('previewModalTitle').innerText = titleName + ' Preview';
+        
+        const iframe = document.getElementById('previewIframe');
+        {% if resume %}
+        iframe.src = "{{ url_for('resume.template_preview', resume_id=resume.id, template_name='__TMPL__') }}".replace('__TMPL__', templateName);
+        {% else %}
+        const dummyIndex = Array.from(templateName).reduce((acc, char) => acc + char.charCodeAt(0), 0) % 50;
+        if (templateHtmlCache[templateName]) {
+            iframe.srcdoc = templateHtmlCache[templateName];
+        } else {
+            fetch(`/api/render-dummy-template/${templateName}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ resume: dummyResumes[dummyIndex], sections: dummyResumes[dummyIndex] })
+            })
+            .then(res => res.text())
+            .then(html => {
+                templateHtmlCache[templateName] = html;
+                iframe.srcdoc = html;
+            });
+        }
+        {% endif %}
+        
+        document.getElementById('btnUseTemplatePreview').onclick = (e) => applyTemplate(templateName, e.currentTarget);
+        new bootstrap.Modal(document.getElementById('previewModal')).show();
+    }
+
+    function applyTemplate(templateName, btn) {
+        const originalText = btn ? btn.innerHTML : '';
+        if(btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying...';
+
+        {% if resume %}
+        fetch("{{ url_for('resume.select_template', resume_id=resume.id, template_name='__TMPL__') }}".replace('__TMPL__', templateName), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.href = "{{ url_for('resume.editor', resume_id=resume.id) }}";
+            } else {
+                alert("Error: " + data.message);
+                if(btn) btn.innerHTML = originalText;
+            }
+        });
+        {% else %}
+        fetch('/select_template', {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({template: templateName})
+        })
+        .then(() => {
+            {% if session.get('user_id') %}
+            window.location.href = "{{ url_for('resume.dashboard') }}"; 
+            {% else %}
+            window.location.href = "{{ url_for('auth.login') }}";
+            {% endif %}
+        });
+        {% endif %}
+    }
+</script>
+{% endblock %}

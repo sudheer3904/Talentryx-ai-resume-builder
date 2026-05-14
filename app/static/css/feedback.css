@@ -1,0 +1,296 @@
+/* Modern SaaS Feedback System */
+:root {
+    --feedback-primary: #4a6fdc;
+    --feedback-primary-hover: #3b5acb;
+    --feedback-bg: rgba(255, 255, 255, 0.85);
+    --feedback-blur: blur(16px);
+    --feedback-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    --feedback-text: #333;
+    --feedback-text-light: #666;
+    --feedback-border: rgba(255, 255, 255, 0.4);
+    --feedback-gradient: linear-gradient(135deg, #4a6fdc, #8c9eff);
+}
+
+/* Floating Button */
+#feedback-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    padding: 12px 24px;
+    background: var(--feedback-bg);
+    backdrop-filter: var(--feedback-blur);
+    -webkit-backdrop-filter: var(--feedback-blur);
+    border: 1px solid var(--feedback-border);
+    border-radius: 50px;
+    box-shadow: var(--feedback-shadow);
+    color: var(--feedback-primary);
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: floating 3s ease-in-out infinite;
+}
+
+#feedback-btn:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(74, 111, 220, 0.3);
+    color: var(--feedback-primary-hover);
+}
+
+@keyframes floating {
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-6px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+/* Modal Overlay */
+.feedback-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1001;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    align-items: center;
+    justify-content: center;
+}
+
+.feedback-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+
+/* Modal Content */
+.feedback-modal {
+    background: var(--feedback-bg);
+    backdrop-filter: var(--feedback-blur);
+    -webkit-backdrop-filter: var(--feedback-blur);
+    border: 1px solid var(--feedback-border);
+    border-radius: 20px;
+    padding: 30px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: var(--feedback-shadow);
+    transform: scale(0.9);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+}
+
+.feedback-overlay.active .feedback-modal {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.feedback-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    color: var(--feedback-text-light);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.feedback-close:hover {
+    color: var(--feedback-text);
+}
+
+.feedback-modal h3 {
+    margin: 0 0 5px 0;
+    color: var(--feedback-text);
+    font-weight: 700;
+    font-size: 22px;
+}
+
+.feedback-modal p {
+    color: var(--feedback-text-light);
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+/* Star Rating */
+.star-rating {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    justify-content: center;
+    flex-direction: row-reverse;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    font-size: 30px;
+    color: #ddd;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.star-rating label:hover,
+.star-rating label:hover~label,
+.star-rating input:checked~label {
+    color: #f1c40f;
+    transform: scale(1.1);
+}
+
+/* Form Elements */
+.feedback-form-group {
+    margin-bottom: 15px;
+}
+
+.feedback-form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--feedback-text);
+}
+
+.feedback-form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    color: var(--feedback-text);
+    font-family: inherit;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.feedback-form-control:focus {
+    outline: none;
+    border-color: var(--feedback-primary);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(74, 111, 220, 0.1);
+}
+
+textarea.feedback-form-control {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Submit Button */
+.feedback-submit {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: var(--feedback-gradient);
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.feedback-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(74, 111, 220, 0.3);
+}
+
+.feedback-submit:active {
+    transform: translateY(0);
+}
+
+.feedback-submit .spinner {
+    display: none;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.feedback-submit.loading .btn-text {
+    opacity: 0;
+}
+
+.feedback-submit.loading .spinner {
+    display: block;
+}
+
+@keyframes spin {
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+/* Success View */
+.feedback-success {
+    display: none;
+    text-align: center;
+    padding: 20px 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.feedback-success.active {
+    display: flex;
+    animation: fadeIn 0.5s ease;
+}
+
+.feedback-success .check-icon {
+    width: 60px;
+    height: 60px;
+    background: #10b981;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 30px;
+    animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}

@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Job Recommendations{% endblock %}
+
+{% block extra_css %}
+<style>
+.job-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.job-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transition: 0.3s;
+}
+
+.job-card:hover {
+  transform: translateY(-5px);
+}
+
+.apply-btn {
+  background: green;
+  color: white;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 6px;
+}
+</style>
+{% endblock %}
+
+{% block main %}
+<div class="container mt-5 pt-5 pb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Recommended Jobs For You</h2>
+        <a href="javascript:window.close()" class="btn btn-secondary">Close</a>
+    </div>
+
+    <div class="job-container">
+    {% for job in jobs %}
+      <div class="job-card">
+        <h3>{{ job.job.replace('_',' ').title() }}</h3>
+        <p><strong>Match:</strong> {{ job.score }}%</p>
+        <p><strong>Required Skills:</strong>
+          {{ job.required_skills | join(', ') }}
+        </p>
+        <p><strong>Missing Skills:</strong>
+          {% if job.missing_skills %}
+            {{ job.missing_skills | join(', ') }}
+          {% else %}
+            <span class="text-success">None!</span>
+          {% endif %}
+        </p>
+        <p><strong>Market Trend:</strong>
+          {{ job.trend }}
+        </p>
+        <a href="{{ job.apply_link }}" target="_blank">
+          <button class="apply-btn">Apply Now</button>
+        </a>
+      </div>
+    {% endfor %}
+    </div>
+</div>
+{% endblock %}

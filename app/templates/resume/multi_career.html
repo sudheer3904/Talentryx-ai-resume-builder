@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}Multi-Career Resumes - {{ resume.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-briefcase me-2"></i>Multi-Career Resume Generator</h2>
+            <p class="text-muted mb-0">Generate 3 career-specific resumes from your current resume: Primary,
+                Transferable, and Alternative.</p>
+        </div>
+        <a href="{{ url_for('resume.editor', resume_id=resume.id) }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Editor
+        </a>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Resume: {{ resume.title }}</h5>
+            <p class="card-text text-muted small">Target role on file: {{ resume.target_role or 'General' }}</p>
+            <button type="button" class="btn btn-primary" id="analyzeBtn">
+                <i class="fas fa-search me-2"></i>Analyze & Generate 3 Career Versions
+            </button>
+            <div id="analyzeSpinner" class="spinner-border spinner-border-sm text-primary ms-2 d-none" role="status">
+            </div>
+        </div>
+    </div>
+
+    <div id="careersPlaceholder" class="row g-4">
+        <div id="careersEmpty" class="col-12 text-center py-5 text-muted">
+            <i class="fas fa-magic fa-3x mb-3"></i>
+            <p>Click "Analyze & Generate 3 Career Versions" to detect your top career matches and create role-specific
+                resumes.</p>
+        </div>
+        <div id="careersRow" class="d-none"></div>
+    </div>
+
+    <div id="careerCards" class="row g-4 mt-2" style="display: none;"></div>
+</div>
+<div id="resume-metadata" data-resume-id="{{ resume.id }}"></div>
+<script>
+    (function () {
+        const resumeId = document.getElementById('resume-metadata').dataset.resumeId;
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const analyzeSpinner = document.getElementById('analyzeSpinner');
+        const careersEmpty = document.getElementById('careersEmpty');
+        const careersRow = document.getElementById('careersRow');
+        const careerCards = document.getElementById('careerCards');
+
+        analyzeBtn.addEventListener('click', function () {
+            analyzeBtn.disabled = true;
+            analyzeSpinner.classList.remove('d-none');
+            careerCards.style.display = 'none';
+            careersEmpty.classList.remove('d-none');
+            careersRow.classList.add('d-none');
+
+            fetch('/resume/' + resumeId + '/multi-career/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    analyzeBtn.disabled = false;
+                    analyzeSpinner.classList.add('d-none');
+                    if (data.status !== 'success' || !data.careers || !data.careers.length) {
+                        careersEmpty.classList.remove('d-none');
+                        careersEmpty.innerHTML = '<p class="text-warning">Could not analyze careers. Ensure your resume has skills and experience filled.</p>';
+                        return;
+                    }
+                    careersEmpty.classList.add('d-none');
+                    careerCards.innerHTML = '';
+                    data.careers.forEach(function (c, i) {
+                        const col = document.createElement('div');
+                        col.className = 'col-md-4 mb-4';
+                        const labelClass = c.rank === 1 ? 'bg-primary' : (c.rank === 2 ? 'bg-info' : 'bg-secondary');
+
+                        const version = i + 1;
+                        col.innerHTML = `
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-header ${labelClass} text-white py-3">
+                            <span class="badge bg-white text-dark mb-2">${c.label || ''}</span>
+                            <h5 class="mb-0"><strong>${c.display_name || ''}</strong></h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="progress flex-grow-1" style="height: 8px;">
+                                    <div class="progress-bar ${labelClass}" role="progressbar" style="width: ${c.score || 0}%"></div>
+                                </div>
+                                <span class="ms-2 fw-bold small">${c.score || 0}% Match</span>
+                            </div>
+                            
+                            <hr class="my-3 opacity-25">
+                            
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Selection Template</label>
+                                <select class="form-select form-select-sm layout-select" data-version="${version}">
+                                    <option value="one_column">One Column (ATS)</option>
+                                    <option value="two_column">Two Column (Modern)</option>
+                                    <option value="mixed_column">Mixed Column (Hybrid)</option>
+                                    <option value="modern_flow">Modern Flow (Pro)</option>
+                                    <option value="minimal">Minimal</option>
+                                    <option value="academic">Academic</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold">Primary Color</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="color" class="form-control form-control-color border-0 p-0 color-input" 
+                                           data-version="${version}" value="#2c3e50" title="Choose color">
+                                    <span class="small text-muted">Accent styling</span>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-outline-primary preview-btn" data-version="${version}">
+                                    <i class="fas fa-eye me-1"></i> Preview
+                                </button>
+                                <button type="button" class="btn btn-success download-btn" data-version="${version}">
+                                    <i class="fas fa-download me-1"></i> Download PDF
+                                </button>
+                                <a href="/interview/career/${c.cluster_key}/start/${resumeId}?score=${c.score || 0}" 
+                                   class="btn btn-light border btn-sm mt-1">
+                                    <i class="fas fa-comments me-1"></i> Prepare for Interview
+                                </a>
+                            </div>
+                        </div>
+                    </div>`;
+                        careerCards.appendChild(col);
+                    });
+                    careerCards.style.display = '';
+
+                    // Attach listeners to newly created elements
+                    document.querySelectorAll('.preview-btn').forEach(btn => {
+                        btn.onclick = function () {
+                            const v = this.dataset.version;
+                            const l = document.querySelector(`.layout-select[data-version="${v}"]`).value;
+                            const c = document.querySelector(`.color-input[data-version="${v}"]`).value;
+                            window.open(`/resume/${resumeId}/multi-career/preview/${v}?layout=${l}&color=${encodeURIComponent(c)}`, '_blank');
+                        };
+                    });
+
+                    document.querySelectorAll('.download-btn').forEach(btn => {
+                        btn.onclick = function () {
+                            const v = this.dataset.version;
+                            const l = document.querySelector(`.layout-select[data-version="${v}"]`).value;
+                            const c = document.querySelector(`.color-input[data-version="${v}"]`).value;
+                            window.location.href = `/resume/${resumeId}/multi-career/download/${v}?layout=${l}&color=${encodeURIComponent(c)}`;
+                        };
+                    });
+                })
+                .catch(function () {
+                    analyzeBtn.disabled = false;
+                    analyzeSpinner.classList.add('d-none');
+                    careersEmpty.innerHTML = '<p class="text-danger">Request failed. Try again.</p>';
+                    careersEmpty.classList.remove('d-none');
+                });
+        });
+    })();
+</script>
+
+{% endblock %}

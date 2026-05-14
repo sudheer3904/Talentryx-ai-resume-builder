@@ -1,0 +1,295 @@
+<!-- Smart Job Recommendations Modal -->
+<div class="modal fade" id="smartJobsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-briefcase me-2"></i>Smart Job Recommendations</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body bg-light">
+                <!-- Filters Section -->
+                <div class="row align-items-center mb-4 bg-white p-3 rounded shadow-sm border">
+                    <div class="col-md-3">
+                        <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-filter text-muted me-2"></i>Filter Results
+                        </h6>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="sj-category-filter" class="form-select form-select-sm" onchange="filterSmartJobs()">
+                            <option value="All">All Categories</option>
+                            <option value="Software Development">Software Development</option>
+                            <option value="Data Science / AI">Data Science / AI</option>
+                            <option value="Web Development">Web Development</option>
+                            <option value="Cybersecurity">Cybersecurity</option>
+                            <option value="Cloud / DevOps">Cloud / DevOps</option>
+                            <option value="UI/UX Design">UI/UX Design</option>
+                            <option value="Business / Management">Business / Management</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="sj-platform-filter" class="form-select form-select-sm" onchange="filterSmartJobs()">
+                            <option value="All">All Platforms</option>
+                            <option value="LinkedIn">LinkedIn</option>
+                            <option value="Naukri">Naukri</option>
+                            <option value="Indeed">Indeed</option>
+                            <option value="Glassdoor">Glassdoor</option>
+                            <option value="Internshala">Internshala</option>
+                            <option value="Freshersworld">Freshersworld</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="smart-jobs-loading" class="text-center py-5">
+                    <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;"></div>
+                    <h5 class="mt-3 text-muted">Finding perfect matches for you...</h5>
+                </div>
+
+                <!-- Job Cards Container -->
+                <div id="smart-jobs-container" class="row g-4" style="display: none;">
+                    <!-- Dynamically populated via JS -->
+                </div>
+
+                <div id="smart-jobs-empty" class="text-center py-5" style="display: none;">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No jobs matching your skills or selected filters.</h5>
+                    <p class="text-secondary">Try adding more skills to your resume or change active filters.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* CSS for the Smart Job Cards */
+    .smart-job-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 12px;
+        background: #fff;
+        border: 1px solid #eaeaea;
+    }
+
+    .smart-job-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+        border-color: #bee5eb;
+    }
+
+    .sj-badge-demand {
+        position: absolute;
+        top: -10px;
+        right: 15px;
+        padding: 0.35em 0.8em;
+        font-size: 0.75em;
+        border-radius: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .sj-matches {
+        font-size: 0.85em;
+        line-height: 1.6;
+    }
+
+    .sj-missing {
+        font-size: 0.85em;
+        background: #fdf2f2;
+        padding: 8px;
+        border-radius: 6px;
+        border-left: 3px solid #dc3545;
+    }
+
+    .platform-btn {
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+    .platform-btn:hover {
+        filter: brightness(0.9);
+    }
+</style>
+
+<script>
+    let globalSmartJobs = [];
+
+    function getEditorSkillsArray() {
+        let skills = [];
+        const tech = (typeof resumeData !== 'undefined' && resumeData.skills && resumeData.skills.skills_tech) ? resumeData.skills.skills_tech : '';
+        const soft = (typeof resumeData !== 'undefined' && resumeData.skills && resumeData.skills.skills_soft) ? resumeData.skills.skills_soft : '';
+        const lang = (typeof resumeData !== 'undefined' && resumeData.skills && resumeData.skills.skills_languages) ? resumeData.skills.skills_languages : '';
+
+        // Merge and split by comma
+        [tech, soft, lang].forEach(str => {
+            if (str.trim()) {
+                // Strip HTML tags for Quill content
+                const cleanStr = str.replace(/<[^>]*>?/gm, '');
+                let parts = cleanStr.split(',').map(s => s.trim()).filter(s => s);
+                skills = skills.concat(parts);
+            }
+        });
+
+        // Extract basic words from Experience and Projects just as an extra fallback
+        const expText = (typeof resumeData !== 'undefined' && resumeData.experience) ? resumeData.experience.map(e => Object.values(e).join(' ')).join(' ').replace(/<[^>]*>?/gm, '') : '';
+        const projText = (typeof resumeData !== 'undefined' && resumeData.projects) ? resumeData.projects.map(p => Object.values(p).join(' ')).join(' ').replace(/<[^>]*>?/gm, '') : '';
+
+        // A quick hack to inject random known skills if they wrote it textually
+        const commonSkills = ["Python", "JavaScript", "HTML", "CSS", "React", "Node.js", "Java", "SQL", "Docker", "AWS", "Agile", "Linux", "Git", "C++", "C#"];
+        const allText = (expText + " " + projText).toLowerCase();
+
+        commonSkills.forEach(cs => {
+            if (allText.includes(cs.toLowerCase()) && !skills.map(s => s.toLowerCase()).includes(cs.toLowerCase())) {
+                skills.push(cs);
+            }
+        });
+
+        return [...new Set(skills)]; // Unique skills
+    }
+
+    async function openSmartJobs() {
+        const modal = new bootstrap.Modal(document.getElementById('smartJobsModal'));
+        modal.show();
+
+        document.getElementById('smart-jobs-loading').style.display = 'block';
+        document.getElementById('smart-jobs-container').style.display = 'none';
+        document.getElementById('smart-jobs-empty').style.display = 'none';
+
+        const userSkills = getEditorSkillsArray();
+
+        // Call our new API
+        try {
+            const response = await fetch('/analysis/recommend-jobs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ skills: userSkills })
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                globalSmartJobs = data.jobs;
+                renderSmartJobs();
+            } else {
+                alert('Failed to fetch job recommendations: ' + data.message);
+            }
+        } catch (e) {
+            console.error("Error fetching jobs", e);
+            alert('Server error occurred while getting recommendations.');
+        } finally {
+            document.getElementById('smart-jobs-loading').style.display = 'none';
+        }
+    }
+
+    function filterSmartJobs() {
+        renderSmartJobs();
+    }
+
+    function renderSmartJobs() {
+        const container = document.getElementById('smart-jobs-container');
+        const emptyState = document.getElementById('smart-jobs-empty');
+        const categoryFilter = document.getElementById('sj-category-filter').value;
+        const platformFilter = document.getElementById('sj-platform-filter').value;
+
+        container.innerHTML = '';
+
+        let filtered = globalSmartJobs.filter(job => {
+            if (categoryFilter !== 'All' && job.category !== categoryFilter) return false;
+
+            if (platformFilter !== 'All') {
+                // Check if job has at least one source matching the platform
+                const hasPlatform = job.platforms.some(p => p.platform_name === platformFilter);
+                if (!hasPlatform) return false;
+            }
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            container.style.display = 'none';
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        container.style.display = 'flex';
+        emptyState.style.display = 'none';
+
+        filtered.forEach(job => {
+            let demandHtml = '';
+            if (job.demand_level === 'High') {
+                demandHtml = `<span class="badge bg-danger text-uppercase sj-badge-demand"><i class="fas fa-fire me-1"></i>High Demand</span>`;
+            } else if (job.demand_level === 'Medium') {
+                demandHtml = `<span class="badge bg-primary text-uppercase sj-badge-demand">Medium Demand</span>`;
+            }
+
+            // Progress bar color based on match
+            let progressColor = job.match_percentage >= 75 ? 'bg-success' : (job.match_percentage >= 50 ? 'bg-info' : 'bg-warning');
+
+            // Missing Skills highlight
+            let missingHtml = `<span class="text-success"><i class="fas fa-check-circle me-1"></i>You meet all requirements!</span>`;
+            if (job.missing_skills.length > 0) {
+                missingHtml = `<span class="text-danger fw-bold">You are missing:</span> <span class="text-dark">${job.missing_skills.slice(0, 5).join(', ')}${job.missing_skills.length > 5 ? ' ...' : ''}</span>`;
+            }
+
+            // Matched Skills
+            let matchedHtml = `<span class="text-muted">No exact skill matches, mostly conceptual match.</span>`;
+            if (job.matched_skills.length > 0) {
+                matchedHtml = `<strong>Matched:</strong> ${job.matched_skills.join(', ')}`;
+            }
+
+            // Platform buttons
+            let platformsHtml = '';
+            job.platforms.forEach(p => {
+                // Only show if it matches filter (if filter applied)
+                if (platformFilter !== 'All' && p.platform_name !== platformFilter) return;
+
+                let btnColor = 'btn-outline-primary';
+                let icon = 'fas fa-external-link-alt';
+                if (p.platform_name === 'LinkedIn') { btnColor = 'btn-primary'; icon = 'fab fa-linkedin'; }
+                if (p.platform_name === 'Glassdoor') { btnColor = 'btn-success'; }
+                if (p.platform_name === 'Indeed') { btnColor = 'btn-info text-white'; }
+
+                platformsHtml += `
+                <a href="${p.job_link}" target="_blank" class="btn btn-sm ${btnColor} platform-btn mb-1 me-1">
+                    <i class="${icon} me-1"></i>View on ${p.platform_name}
+                </a>
+            `;
+            });
+
+            const card = document.createElement('div');
+            card.className = 'col-lg-4 col-md-6';
+            card.innerHTML = `
+            <div class="smart-job-card h-100 p-3 position-relative d-flex flex-column">
+                ${demandHtml}
+                <div class="mb-2">
+                    <span class="badge bg-light text-dark border border-secondary mb-1">${job.category}</span>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">${job.job_title}</h5>
+                
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-grow-1 me-3">
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar progress-bar-animated ${progressColor}" role="progressbar" style="width: ${job.match_percentage}%" aria-valuenow="${job.match_percentage}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    <span class="fw-bold fs-6 ${progressColor.replace('bg-', 'text-')}">${job.match_percentage}%</span>
+                </div>
+                
+                <div class="sj-matches text-muted mb-2">
+                    ${matchedHtml}
+                </div>
+                
+                <div class="sj-missing mb-3">
+                    ${missingHtml}
+                </div>
+                
+                <div class="mt-auto pt-2 border-top">
+                    ${platformsHtml}
+                </div>
+            </div>
+        `;
+            container.appendChild(card);
+        });
+    }
+</script>

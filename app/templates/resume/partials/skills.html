@@ -1,0 +1,23 @@
+{% if sections.skills %}
+<div class="section">
+    <h2 class="section-title">{{ t.headers.skills }}</h2>
+    {% if sections.skills.skills_tech %}
+    <div class="item">
+        <div class="item-header">{{ t.labels.tech_skills }}</div>
+        <div class="item-desc">{{ sections.skills.skills_tech | safe }}</div>
+    </div>
+    {% endif %}
+    {% if sections.skills.skills_soft %}
+    <div class="item">
+        <div class="item-header">{{ t.labels.soft_skills }}</div>
+        <div class="item-desc">{{ sections.skills.skills_soft | safe }}</div>
+    </div>
+    {% endif %}
+    {% if sections.skills.skills_languages %}
+    <div class="item">
+        <div class="item-header">{{ t.labels.languages }}</div>
+        <div class="item-desc">{{ sections.skills.skills_languages | safe }}</div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}

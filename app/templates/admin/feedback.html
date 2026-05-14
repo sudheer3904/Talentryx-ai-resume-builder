@@ -1,0 +1,421 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Feedback Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --dash-primary: #4a6fdc;
+        --dash-success: #10b981;
+        --dash-warning: #f59e0b;
+        --dash-danger: #ef4444;
+        --dash-bg: #f8fafc;
+        --dash-card: #ffffff;
+    }
+
+    body {
+        background-color: var(--dash-bg);
+    }
+
+    .stat-card {
+        background: var(--dash-card);
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        height: 100%;
+        transition: transform 0.2s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .stat-title {
+        color: #64748b;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 8px;
+    }
+
+    .stat-value {
+        font-size: 2.25rem;
+        font-weight: 700;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .bg-light-primary {
+        background: #e0e7ff;
+        color: var(--dash-primary);
+    }
+
+    .bg-light-success {
+        background: #d1fae5;
+        color: var(--dash-success);
+    }
+
+    .bg-light-warning {
+        background: #fef3c7;
+        color: var(--dash-warning);
+    }
+
+    .category-bar {
+        height: 8px;
+        background: #e2e8f0;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+
+    .category-fill {
+        height: 100%;
+        background: var(--dash-primary);
+        border-radius: 4px;
+    }
+
+    .feedback-table-container {
+        background: var(--dash-card);
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .table thead th {
+        background: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
+        color: #475569;
+        font-weight: 600;
+        padding: 16px;
+    }
+
+    .table tbody td {
+        padding: 16px;
+        vertical-align: middle;
+        color: #334155;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .rating-stars {
+        color: #cbd5e1;
+        letter-spacing: 2px;
+    }
+
+    .rating-stars .active {
+        color: #fbbf24;
+    }
+
+    .badge-category {
+        background: #f1f5f9;
+        color: #475569;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.85rem;
+    }
+
+    .keyword-highlight {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 0 4px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    .loader {
+        border: 3px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 3px solid var(--dash-primary);
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Admin Panel – Feedback Analytics</h2>
+            <p class="text-muted m-0">Monitor user feedback and system improvements</p>
+        </div>
+        <div>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary me-2">Admin Home</a>
+            <a href="{{ url_for('admin.logout') }}" class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-4 mb-4" id="stats-container">
+        <div class="col-12 text-center py-5">
+            <div class="loader"></div>
+            <p class="text-muted mt-2">Loading analytics...</p>
+        </div>
+    </div>
+
+    <!-- Feedback Table -->
+    <div class="feedback-table-container">
+        <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="m-0 fw-bold">Recent Feedback</h5>
+            <div class="input-group" style="width: 250px;">
+                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" id="searchInput" class="form-control border-start-0 ps-0"
+                    placeholder="Search feedback...">
+            </div>
+        </div>
+        <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+            <table class="table table-hover mb-0" id="feedback-table">
+                <thead>
+                    <tr>
+                        <th style="width: 120px;">Rating</th>
+                        <th style="width: 150px;">Category</th>
+                        <th>Message</th>
+                        <th style="width: 200px;">User</th>
+                        <th style="width: 120px;">Date</th>
+                    </tr>
+                </thead>
+                <tbody id="feedback-list">
+                    <!-- Dynamically populated -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        loadDashboardData();
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#feedback-list tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        });
+    });
+
+    const KEYWORDS = ['bug', 'slow', 'error', 'crash', 'fail', 'issue'];
+
+    function highlightKeywords(text) {
+        if (!text) return '';
+        let highlighted = text;
+        KEYWORDS.forEach(kw => {
+            const regex = new RegExp(`\\b(${kw}s?)\\b`, 'gi');
+            highlighted = highlighted.replace(regex, '<span class="keyword-highlight">$&</span>');
+        });
+        return highlighted;
+    }
+
+    function renderStars(rating) {
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+            stars += `<i class="fas fa-star ${i <= rating ? 'active' : ''}"></i>`;
+        }
+        return `<div class="rating-stars">${stars}</div>`;
+    }
+
+    function formatDate(dateStr) {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    async function loadDashboardData() {
+        try {
+            // Fetch stats and list concurrently
+            const [statsRes, listRes] = await Promise.all([
+                fetch('/api/ai/feedback/stats'),
+                fetch('/api/ai/feedback/list')
+            ]);
+
+            const statsData = await statsRes.json();
+            const listData = await listRes.json();
+
+            if (statsData.status === 'success' && listData.status === 'success') {
+                renderStats(statsData.data, listData.data);
+                renderTable(listData.data);
+            } else {
+                console.error("Failed to fetch data.");
+            }
+        } catch (error) {
+            console.error("Error loading dashboard:", error);
+            document.getElementById('stats-container').innerHTML = '<div class="col-12"><div class="alert alert-danger">Error loading analytics data.</div></div>';
+        }
+    }
+
+    function renderStats(stats, list) {
+        // Calculate Top Issue from list
+        let issueCounts = { 'bug': 0, 'slow': 0, 'error': 0 };
+        let totalIssues = 0;
+
+        list.forEach(item => {
+            if (item.message) {
+                const msg = item.message.toLowerCase();
+                let hasIssue = false;
+                KEYWORDS.forEach(kw => {
+                    if (msg.includes(kw)) {
+                        if (issueCounts[kw] !== undefined) issueCounts[kw]++;
+                        hasIssue = true;
+                    }
+                });
+                if (hasIssue) totalIssues++;
+            }
+        });
+
+        let topIssueText = "No major issues";
+        if (totalIssues > 0) {
+            const top = Object.keys(issueCounts).reduce((a, b) => issueCounts[a] > issueCounts[b] ? a : b);
+            if (issueCounts[top] > 0) {
+                const pct = Math.round((issueCounts[top] / list.length) * 100);
+                topIssueText = `Top Issue: ${top.charAt(0).toUpperCase() + top.slice(1)}s (${pct}%)`;
+            }
+        }
+
+        // Render Cards
+        const container = document.getElementById('stats-container');
+        container.innerHTML = `
+            <div class="col-md-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="stat-title">Avg Rating</div>
+                            <div class="stat-value">${stats.average_rating.toFixed(1)} <span class="fs-5 text-warning"><i class="fas fa-star"></i></span></div>
+                        </div>
+                        <div class="stat-icon bg-light-warning">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="stat-title">Total Feedback</div>
+                            <div class="stat-value">${stats.total_count}</div>
+                        </div>
+                        <div class="stat-icon bg-light-primary">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="stat-title">System Health</div>
+                            <div class="stat-value fs-4">${topIssueText}</div>
+                        </div>
+                        <div class="stat-icon bg-light-success">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-3">
+                <div class="stat-card" style="padding: 16px 24px;">
+                    <div class="stat-title mb-2">Top Categories</div>
+                    <div id="category-breakdown"></div>
+                </div>
+            </div>
+        `;
+
+        // Render Category Breakdown
+        const catContainer = document.getElementById('category-breakdown');
+        const categories = stats.categories || {};
+        const total = stats.total_count || 1; // avoid div by 0
+
+        // Sort categories by count
+        const sortedCats = Object.keys(categories).sort((a, b) => categories[b] - categories[a]).slice(0, 3);
+
+        if (sortedCats.length === 0) {
+            catContainer.innerHTML = '<span class="text-muted small">No data</span>';
+        } else {
+            let html = '';
+            sortedCats.forEach(cat => {
+                const count = categories[cat];
+                const pct = Math.round((count / total) * 100);
+                html += `
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small">
+                            <span class="text-truncate" style="max-width: 120px;" title="${cat}">${cat}</span>
+                            <span class="fw-bold">${pct}%</span>
+                        </div>
+                        <div class="category-bar">
+                            <div class="category-fill" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            catContainer.innerHTML = html;
+        }
+    }
+
+    function renderTable(list) {
+        const tbody = document.getElementById('feedback-list');
+
+        if (list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted">No feedback collected yet.</td></tr>';
+            return;
+        }
+
+        let html = '';
+        list.forEach(item => {
+            html += `
+                <tr>
+                    <td>${renderStars(item.rating)}</td>
+                    <td><span class="badge-category">${item.category || 'General'}</span></td>
+                    <td style="max-width: 300px;">
+                        <div class="text-truncate text-wrap" style="max-height: 4.5em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
+                            ${highlightKeywords(item.message || '')}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="text-truncate" style="max-width: 180px;">
+                            ${item.email ? `<a href="mailto:${item.email}" class="text-decoration-none text-primary"><i class="fas fa-envelope me-1"></i>${item.email}</a>` : '<span class="text-muted fst-italic">Anonymous</span>'}
+                        </div>
+                    </td>
+                    <td class="text-muted small">${formatDate(item.created_at)}</td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html;
+    }
+</script>
+{% endblock %}

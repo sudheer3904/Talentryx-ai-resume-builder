@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Mock Interview Setup{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">AI Mock Interview Setup</div>
+            <div class="card-body">
+                <form action="{{ url_for('interview.start') }}" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Select Target Role</label>
+                        <select name="role" class="form-select">
+                            <option value="software engineer">Software Engineer</option>
+                            <option value="data scientist">Data Scientist</option>
+                            <option value="frontend developer">Frontend Developer</option>
+                            <option value="general">General</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Start Interview</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
